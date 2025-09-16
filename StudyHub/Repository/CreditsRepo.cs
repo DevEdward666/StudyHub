@@ -54,9 +54,26 @@ namespace StudyHub.Repository
         }
         public async Task<Credits> CreateCredits(Credits credits)
         {
-            _context.Credits.Add(credits);
-            await _context.SaveChangesAsync();
-            return credits;
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    if (credits.price <= 0 || credits.credit_value_hours <= 0 || credits.credit_value <= 0)
+                    {
+                        throw new Exception("Value must be greater than 0");
+                    }
+                    _context.Credits.Add(credits);
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                    return credits;
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    throw new Exception("An error occurred while Buying credits.", ex);
+
+                }
+            }
         }
 
         public async Task<List<Credits>> GetAllCredits()
@@ -83,9 +100,14 @@ namespace StudyHub.Repository
                     {
                         throw new Exception("Credit not found.");
                     }
+                    if(updateCredits.price <= 0|| updateCredits.credit_value_hours <= 0 || updateCredits.credit_value <=0)
+                    {
+                        throw new Exception("Value must be greater than 0");
+                    }
 
                     creditTobeUpdated.status = updateCredits.status;
                     creditTobeUpdated.price = updateCredits.price;
+                    creditTobeUpdated.credit_value_hours = updateCredits.credit_value_hours;
                     creditTobeUpdated.name = updateCredits.name;
                     creditTobeUpdated.credit_value = updateCredits.credit_value;
 

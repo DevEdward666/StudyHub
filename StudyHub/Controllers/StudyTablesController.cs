@@ -1,12 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StudyHub.Data;
+using StudyHub.Interface;
 using StudyHub.Models;
+using StudyHub.Repository;
+using StudyHub.ViewModels;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace StudyHub.Controllers
 {
@@ -15,24 +18,25 @@ namespace StudyHub.Controllers
     public class StudyTablesController : ControllerBase
     {
         private readonly StudyHubContext _context;
-
-        public StudyTablesController(StudyHubContext context)
+        private IStudayTablesRepo _studayTablesRepo;
+        public StudyTablesController(StudyHubContext context, IStudayTablesRepo studayTablesRepo)
         {
             _context = context;
+            _studayTablesRepo = studayTablesRepo;
         }
 
-        // GET: api/StudyTables
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<StudyTables>>> GetStudyTables()
+        public async Task<ActionResult<List<StudyTables>>> GetStudyTables()
         {
-            return await _context.StudyTables.ToListAsync();
+            return await _studayTablesRepo.GetAllStudyTables();
         }
 
-        // GET: api/StudyTables/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<StudyTables>> GetStudyTables(int id)
+        public async Task<ActionResult<SelectedStudyTable>> GetStudyTables(int id)
         {
-            var studyTables = await _context.StudyTables.FindAsync(id);
+            StudyTablesById studyTablesById = new StudyTablesById();
+            studyTablesById.study_tables_id = id;
+            var studyTables = await _studayTablesRepo.GetStudyTablesById(studyTablesById);
 
             if (studyTables == null)
             {
@@ -42,21 +46,17 @@ namespace StudyHub.Controllers
             return studyTables;
         }
 
-        // PUT: api/StudyTables/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutStudyTables(int id, StudyTables studyTables)
+        [HttpPut]
+        [Route("UpdateStudyTable")]
+        public async Task<IActionResult> UpdateStudyTable(int id, StudyTablesDto studyTables)
         {
             if (id != studyTables.id)
             {
                 return BadRequest();
             }
-
-            _context.Entry(studyTables).State = EntityState.Modified;
-
             try
             {
-                await _context.SaveChangesAsync();
+                await _studayTablesRepo.UpdateTables(studyTables);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -72,33 +72,71 @@ namespace StudyHub.Controllers
 
             return NoContent();
         }
-
-        // POST: api/StudyTables
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
-        public async Task<ActionResult<StudyTables>> PostStudyTables(StudyTables studyTables)
+        [HttpPut]
+        [Route("EndSession")]
+        public async Task<IActionResult> EndSession(int id, EndSessionDto endSessionDto)
         {
-            _context.StudyTables.Add(studyTables);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetStudyTables", new { id = studyTables.id }, studyTables);
-        }
-
-        // DELETE: api/StudyTables/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteStudyTables(int id)
-        {
-            var studyTables = await _context.StudyTables.FindAsync(id);
-            if (studyTables == null)
+            if (id != endSessionDto.id)
             {
-                return NotFound();
+                return BadRequest();
             }
-
-            _context.StudyTables.Remove(studyTables);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _studayTablesRepo.EndSession(endSessionDto);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!StudyTablesExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
 
             return NoContent();
         }
+        [HttpPost]
+        [Route("CustomerScanTableDto")]
+        public async Task<IActionResult> UpdateStudyTable(CustomerScanTableDto studyTables)
+        {
+            try
+            {
+                await _studayTablesRepo.CustomerScanTable(studyTables);
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!StudyTablesExists(studyTables.id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
+            return NoContent();
+        }
+        [HttpPost]
+        [Route("CreateStudyTable")]
+        public async Task<ActionResult<StudyTables>> CreateStudyTable(StudyTablesDto studyTables)
+        {
+            try
+            {
+                var result = await _studayTablesRepo.CreateStudyTables(studyTables);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest();
+            }
+        }
+
 
         private bool StudyTablesExists(int id)
         {
