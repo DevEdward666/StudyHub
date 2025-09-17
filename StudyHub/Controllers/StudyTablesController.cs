@@ -19,10 +19,15 @@ namespace StudyHub.Controllers
     {
         private readonly StudyHubContext _context;
         private IStudayTablesRepo _studayTablesRepo;
-        public StudyTablesController(StudyHubContext context, IStudayTablesRepo studayTablesRepo)
+        private IUserActivity _userActivity;
+        private IUsersRepo _usersRepo;
+
+        public StudyTablesController(StudyHubContext context, IStudayTablesRepo studayTablesRepo, IUserActivity userActivity, IUsersRepo usersRepo)
         {
             _context = context;
             _studayTablesRepo = studayTablesRepo;
+            _userActivity = userActivity;
+            _usersRepo = usersRepo;
         }
 
         [HttpGet]
@@ -83,6 +88,11 @@ namespace StudyHub.Controllers
             try
             {
                 await _studayTablesRepo.EndSession(endSessionDto);
+                UserActivity userActivity = new UserActivity();
+                userActivity.name = "End Session";
+                userActivity.user_id = endSessionDto.user_id;
+                userActivity.description = $"Session Ended by ${endSessionDto.user_id}";
+                await _userActivity.CreateActivity(userActivity);
             }
             catch (DbUpdateConcurrencyException)
             {
@@ -99,12 +109,23 @@ namespace StudyHub.Controllers
             return NoContent();
         }
         [HttpPost]
-        [Route("CustomerScanTableDto")]
-        public async Task<IActionResult> UpdateStudyTable(CustomerScanTableDto studyTables)
+        [Route("CustomerScanTable")]
+        public async Task<ActionResult> CustomerScanTable(CustomerScanTableDto studyTables)
         {
             try
             {
-                await _studayTablesRepo.CustomerScanTable(studyTables);
+                UserActivity userActivity = new UserActivity();
+                StudyTablesById studyTablesById = new StudyTablesById();
+                var user_id = studyTables.used_by ?? 0;
+        
+                var res = await _studayTablesRepo.CustomerScanTable(studyTables);
+                studyTablesById.study_tables_id = res.id;
+               var getstudyTables =  await _studayTablesRepo.GetStudyTablesById(studyTablesById);
+                var user_details = await _usersRepo.GetUserById(user_id);
+                userActivity.name = "Customer Uses Table";
+                userActivity.user_id = user_id;
+                userActivity.description = $"Customer ${user_details.firstname} ${user_details.lastname} Uses Table for ${getstudyTables.remaining_time}";
+                await _userActivity.CreateActivity(userActivity);
             }
             catch (DbUpdateConcurrencyException)
             {

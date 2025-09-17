@@ -21,14 +21,12 @@ namespace StudyHub.Controllers
             _context = context;
         }
 
-        // GET: api/Transactions
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Transactions>>> GetTransactions()
         {
             return await _context.Transactions.ToListAsync();
         }
 
-        // GET: api/Transactions/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Transactions>> GetTransactions(int id)
         {
@@ -42,8 +40,6 @@ namespace StudyHub.Controllers
             return transactions;
         }
 
-        // PUT: api/Transactions/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTransactions(int id, Transactions transactions)
         {
@@ -73,8 +69,6 @@ namespace StudyHub.Controllers
             return NoContent();
         }
 
-        // POST: api/Transactions
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         public async Task<ActionResult<Transactions>> PostTransactions(Transactions transactions)
         {

@@ -17,7 +17,7 @@ builder.Services.AddScoped<ICreditsRepo, CreditsRepo>();
 builder.Services.AddScoped<IUsersRepo, UsersRepo>();
 builder.Services.AddScoped<IAuthRepo, AuthRepo>();
 builder.Services.AddScoped<IStudayTablesRepo, StudyTablesRepo>();
-
+builder.Services.AddScoped<IUserActivity, UserActivityRepo>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

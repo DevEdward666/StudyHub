@@ -18,11 +18,12 @@ namespace StudyHub.Controllers
     {
         private readonly StudyHubContext _context;
         private ICreditsRepo _creditsRepo;
-
-        public CreditsController(StudyHubContext context, ICreditsRepo creditsRepo)
+        private IUserActivity _userActivity;
+        public CreditsController(StudyHubContext context, ICreditsRepo creditsRepo, IUserActivity userActivity)
         {
             _context = context;
             _creditsRepo = creditsRepo;
+            _userActivity = userActivity;
         }
 
         [HttpGet]
@@ -90,7 +91,13 @@ namespace StudyHub.Controllers
         {
             try
             {
+                UserActivity userActivity = new UserActivity();
+                userActivity.name = "Bought Credits";
+                userActivity.user_id = credits.user_id;
+                userActivity.description = $"Bought Credits for ${credits.user_id}";
+                await _userActivity.CreateActivity(userActivity);
                 return await _creditsRepo.BuyCredits(credits);
+
             }
             catch (Exception ex)
             {

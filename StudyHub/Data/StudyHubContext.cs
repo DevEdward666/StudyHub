@@ -18,5 +18,7 @@ namespace StudyHub.Data
         public DbSet<StudyHub.Models.Credits> Credits { get; set; } = default!;
         public DbSet<StudyHub.Models.Transactions> Transactions { get; set; } = default!;
         public DbSet<StudyHub.Models.StudyTables> StudyTables { get; set; } = default!;
+        public DbSet<StudyHub.Models.Logs> Logs { get; set; } = default!;
+        public DbSet<StudyHub.Models.UserActivity> UserActivity { get; set; } = default!;
     }
 }

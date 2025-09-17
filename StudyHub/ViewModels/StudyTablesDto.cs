@@ -25,7 +25,7 @@ namespace StudyHub.ViewModels
     {
         public int id { get; set; }
         public int status { get; set; } // 0 Not Use, 1 Used
-
+        public int user_id { get; set; }
         public string? session_started { get; set; }
         public string? session_ended { get; set; } // session ended by user
         public string? session_finished { get; set; } // session should ended
